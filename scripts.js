@@ -1,3 +1,9 @@
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 /**
  *
  * Copyright 2016 Google Inc. All rights reserved.
@@ -23,8 +29,10 @@
  * Limitations: Doesn't support Shadow DOM v0 :P
  */
 
-class Detabinator {
-  constructor(element) {
+var Detabinator = function () {
+  function Detabinator(element) {
+    _classCallCheck(this, Detabinator);
+
     if (!element) {
       throw new Error('Missing required argument. new Detabinator needs an element reference');
     }
@@ -33,38 +41,42 @@ class Detabinator {
     this._focusableElements = Array.from(element.querySelectorAll(this._focusableElementsString));
   }
 
-  get inert() {
-    return this._inert;
-  }
-
-  set inert(isInert) {
-    if (this._inert === isInert) {
-      return;
-    }
-
-    this._inert = isInert;
-
-    this._focusableElements.forEach(child => {
-      if (isInert) {
-        // If the child has an explict tabindex save it
-        if (child.hasAttribute('tabindex')) {
-          child.__savedTabindex = child.tabIndex;
-        }
-        // Set ALL focusable children to tabindex -1
-        child.setAttribute('tabindex', -1);
-      } else {
-        // If the child has a saved tabindex, restore it
-        // Because the value could be 0, explicitly check that it's not false
-        if (child.__savedTabindex === 0 || child.__savedTabindex) {
-          return child.setAttribute('tabindex', child.__savedTabindex);
-        } else {
-          // Remove tabindex from ANY REMAINING children
-          child.removeAttribute('tabindex');
-        }
+  _createClass(Detabinator, [{
+    key: 'inert',
+    get: function get() {
+      return this._inert;
+    },
+    set: function set(isInert) {
+      if (this._inert === isInert) {
+        return;
       }
-    });
-  }
-}
+
+      this._inert = isInert;
+
+      this._focusableElements.forEach(function (child) {
+        if (isInert) {
+          // If the child has an explict tabindex save it
+          if (child.hasAttribute('tabindex')) {
+            child.__savedTabindex = child.tabIndex;
+          }
+          // Set ALL focusable children to tabindex -1
+          child.setAttribute('tabindex', -1);
+        } else {
+          // If the child has a saved tabindex, restore it
+          // Because the value could be 0, explicitly check that it's not false
+          if (child.__savedTabindex === 0 || child.__savedTabindex) {
+            return child.setAttribute('tabindex', child.__savedTabindex);
+          } else {
+            // Remove tabindex from ANY REMAINING children
+            child.removeAttribute('tabindex');
+          }
+        }
+      });
+    }
+  }]);
+
+  return Detabinator;
+}();
 /**
  *
  * Copyright 2016 Google Inc. All rights reserved.
@@ -84,8 +96,10 @@ class Detabinator {
 
 'use strict';
 
-class SideNav {
-  constructor() {
+var SideNav = function () {
+  function SideNav() {
+    _classCallCheck(this, SideNav);
+
     this.showButtonEl = document.querySelector('.js-menu-show');
     this.hideButtonEl = document.querySelector('.js-menu-hide');
     this.sideNavEl = document.querySelector('.js-side-nav');
@@ -113,97 +127,113 @@ class SideNav {
   }
 
   // apply passive event listening if it's supported
-  applyPassive() {
-    if (this.supportsPassive !== undefined) {
-      return this.supportsPassive ? { passive: true } : false;
+
+
+  _createClass(SideNav, [{
+    key: 'applyPassive',
+    value: function applyPassive() {
+      if (this.supportsPassive !== undefined) {
+        return this.supportsPassive ? { passive: true } : false;
+      }
+      // feature detect
+      var isSupported = false;
+      try {
+        document.addEventListener('test', null, { get passive() {
+            isSupported = true;
+          } });
+      } catch (e) {}
+      this.supportsPassive = isSupported;
+      return this.applyPassive();
     }
-    // feature detect
-    let isSupported = false;
-    try {
-      document.addEventListener('test', null, { get passive() {
-          isSupported = true;
-        } });
-    } catch (e) {}
-    this.supportsPassive = isSupported;
-    return this.applyPassive();
-  }
+  }, {
+    key: 'addEventListeners',
+    value: function addEventListeners() {
+      this.showButtonEl.addEventListener('click', this.showSideNav);
+      this.hideButtonEl.addEventListener('click', this.hideSideNav);
+      this.sideNavEl.addEventListener('click', this.hideSideNav);
+      this.sideNavContainerEl.addEventListener('click', this.blockClicks);
 
-  addEventListeners() {
-    this.showButtonEl.addEventListener('click', this.showSideNav);
-    this.hideButtonEl.addEventListener('click', this.hideSideNav);
-    this.sideNavEl.addEventListener('click', this.hideSideNav);
-    this.sideNavContainerEl.addEventListener('click', this.blockClicks);
-
-    this.sideNavEl.addEventListener('touchstart', this.onTouchStart, this.applyPassive());
-    this.sideNavEl.addEventListener('touchmove', this.onTouchMove, this.applyPassive());
-    this.sideNavEl.addEventListener('touchend', this.onTouchEnd);
-  }
-
-  onTouchStart(evt) {
-    if (!this.sideNavEl.classList.contains('side-nav--visible')) return;
-
-    this.startX = evt.touches[0].pageX;
-    this.currentX = this.startX;
-
-    this.touchingSideNav = true;
-    requestAnimationFrame(this.update);
-  }
-
-  onTouchMove(evt) {
-    if (!this.touchingSideNav) return;
-
-    this.currentX = evt.touches[0].pageX;
-    const translateX = Math.min(0, this.currentX - this.startX);
-
-    if (translateX < 0) {
-      evt.preventDefault();
+      this.sideNavEl.addEventListener('touchstart', this.onTouchStart, this.applyPassive());
+      this.sideNavEl.addEventListener('touchmove', this.onTouchMove, this.applyPassive());
+      this.sideNavEl.addEventListener('touchend', this.onTouchEnd);
     }
-  }
+  }, {
+    key: 'onTouchStart',
+    value: function onTouchStart(evt) {
+      if (!this.sideNavEl.classList.contains('side-nav--visible')) return;
 
-  onTouchEnd(evt) {
-    if (!this.touchingSideNav) return;
+      this.startX = evt.touches[0].pageX;
+      this.currentX = this.startX;
 
-    this.touchingSideNav = false;
-
-    const translateX = Math.min(0, this.currentX - this.startX);
-    this.sideNavContainerEl.style.transform = '';
-
-    if (translateX < 0) {
-      this.hideSideNav();
+      this.touchingSideNav = true;
+      requestAnimationFrame(this.update);
     }
-  }
+  }, {
+    key: 'onTouchMove',
+    value: function onTouchMove(evt) {
+      if (!this.touchingSideNav) return;
 
-  update() {
-    if (!this.touchingSideNav) return;
+      this.currentX = evt.touches[0].pageX;
+      var translateX = Math.min(0, this.currentX - this.startX);
 
-    requestAnimationFrame(this.update);
+      if (translateX < 0) {
+        evt.preventDefault();
+      }
+    }
+  }, {
+    key: 'onTouchEnd',
+    value: function onTouchEnd(evt) {
+      if (!this.touchingSideNav) return;
 
-    const translateX = Math.min(0, this.currentX - this.startX);
-    this.sideNavContainerEl.style.transform = `translateX(${ translateX }px)`;
-  }
+      this.touchingSideNav = false;
 
-  blockClicks(evt) {
-    evt.stopPropagation();
-  }
+      var translateX = Math.min(0, this.currentX - this.startX);
+      this.sideNavContainerEl.style.transform = '';
 
-  onTransitionEnd(evt) {
-    this.sideNavEl.classList.remove('side-nav--animatable');
-    this.sideNavEl.removeEventListener('transitionend', this.onTransitionEnd);
-  }
+      if (translateX < 0) {
+        this.hideSideNav();
+      }
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+      if (!this.touchingSideNav) return;
 
-  showSideNav() {
-    this.sideNavEl.classList.add('side-nav--animatable');
-    this.sideNavEl.classList.add('side-nav--visible');
-    this.detabinator.inert = false;
-    this.sideNavEl.addEventListener('transitionend', this.onTransitionEnd);
-  }
+      requestAnimationFrame(this.update);
 
-  hideSideNav() {
-    this.sideNavEl.classList.add('side-nav--animatable');
-    this.sideNavEl.classList.remove('side-nav--visible');
-    this.detabinator.inert = true;
-    this.sideNavEl.addEventListener('transitionend', this.onTransitionEnd);
-  }
-}
+      var translateX = Math.min(0, this.currentX - this.startX);
+      this.sideNavContainerEl.style.transform = 'translateX(' + translateX + 'px)';
+    }
+  }, {
+    key: 'blockClicks',
+    value: function blockClicks(evt) {
+      evt.stopPropagation();
+    }
+  }, {
+    key: 'onTransitionEnd',
+    value: function onTransitionEnd(evt) {
+      this.sideNavEl.classList.remove('side-nav--animatable');
+      this.sideNavEl.removeEventListener('transitionend', this.onTransitionEnd);
+    }
+  }, {
+    key: 'showSideNav',
+    value: function showSideNav() {
+      this.sideNavEl.classList.add('side-nav--animatable');
+      this.sideNavEl.classList.add('side-nav--visible');
+      this.detabinator.inert = false;
+      this.sideNavEl.addEventListener('transitionend', this.onTransitionEnd);
+    }
+  }, {
+    key: 'hideSideNav',
+    value: function hideSideNav() {
+      this.sideNavEl.classList.add('side-nav--animatable');
+      this.sideNavEl.classList.remove('side-nav--visible');
+      this.detabinator.inert = true;
+      this.sideNavEl.addEventListener('transitionend', this.onTransitionEnd);
+    }
+  }]);
+
+  return SideNav;
+}();
 
 new SideNav();
